@@ -1,29 +1,35 @@
 "use strict";
 
 const Rx = require('rxjs');
-const Promise = require('bluebird');
+const request = require('request');
 
-let observable = Rx.Observable.create( observer => {
+let basicObservable = Rx.Observable.create( observer => {
     observer.next('Learning RxJs');
     observer.next('piece');
     observer.next('by');
     observer.next('piece');
 });
-observable.subscribe(val => console.log(val));
+basicObservable.subscribe(val => console.log(val));
 
 console.log('-------');
 
-console.log('Promises can be converted to observables...');
+var options = {
+	uri: 'https://api.github.com/users/kjhe11e/repos',
+	method: 'GET',
+	headers: {'user-agent': 'node.js'}
+};
 
-const myPromise = new Promise((resolve, reject) => {
-    setTimeout(() => {
-        resolve('like this resolved promise!');
-    }, 3000);
-});
+let apiRequestObservable = Rx.Observable.create(function (observer) {
+	request(options, function (err, response, body) {
+		if (err) {
+			observer.error();
+		} else {
+			observer.next({response: response, body: body });
+		}
+		observer.complete();
+	})
+})
+.map(e => console.log(e));
+apiRequestObservable.subscribe();
 
-const obsvPromise = Rx.Observable.fromPromise(myPromise);
-obsvPromise.subscribe(result => {
-    console.log(result);
-    console.log('-------');
-});
 
